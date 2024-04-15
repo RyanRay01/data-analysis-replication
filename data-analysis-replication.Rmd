@@ -1,0 +1,145 @@
+---
+title: "data-analysis-replication"
+output: html_document
+date: "2024-04-03"
+---
+
+```{r}
+library(tidyverse)
+library(data.table)
+library(lme4)
+library(MuMIn)
+library(MASS)
+library(AICcmodavg)
+library(broom)
+```
+
+### Load in files
+```{r}
+f1 <- "https://raw.githubusercontent.com/RyanRay01/data-analysis-replication/main/data/traits.st.csv"
+t <- read_csv(f1)
+
+f2 <- "https://raw.githubusercontent.com/RyanRay01/data-analysis-replication/main/data/predictors_raw.csv"
+
+p <- read_csv(f2)
+
+f3 <- "https://raw.githubusercontent.com/RyanRay01/data-analysis-replication/main/data/functions4.st.csv"
+
+f <- read_csv(f3)
+
+```
+
+### 
+```{r}
+### Give "f" arbitrary "seasons" so it can work with "p"
+fe <- f %>% 
+      filter(row_number() <= 2000) %>% 
+      bind_rows(f)
+
+seasons <- rep(c("spring", "summer"), times = nrow(fe)/2)
+
+fe <- fe %>% mutate(season = c(seasons))
+
+### Create joined dataset "d" by giving rows "plot IDs" and combining them
+
+fe <- fe %>% mutate(Plot_ID = paste(fe$plot,fe$year,fe$season, sep = "_"))
+pe <- p %>% mutate(Plot_ID = paste(p$plot,p$year,p$season, sep = "_"))
+
+d <- merge(fe, pe, by = "Plot_ID") %>% subset(select=-c(plot.y,season.y,year.y)) %>%
+  setnames( "plot.x", "PlotNum") %>%
+  setnames( "year.x", "YearNum") %>%
+  mutate(YearNum = as.factor(YearNum))
+
+### Left Join
+```
+
+### Create lists of Ecosystem Properties and FI and FD trait names
+```{r}
+ecoProp <- fe %>%
+  subset(select=-c(plot, year, sowndiv, block, season, Plot_ID)) %>%
+  colnames()
+
+traitFI <- pe %>% subset(select = c(FI_ra, FI_lbpr,
+                  FI_la, FI_sra, FI_srl, FI_RNU, FI_nute, FI_k.rad, 
+                  FI_RootingDepth_Target, FI_h1, FI_erect, FI_lar, 
+                  FI_fc, FI_sla, FI_lSize, FI_srr, FI_sd, FI_ssd, 
+                  FI_leafN, FI_leafC, FI_Nacr, FI_cond, FI_lt, FI_pp, 
+                  FI_lsd, FI_ldmc, FI_LCN, FI_rtd, FI_RCN, FI_sdmc, 
+                  FI_BM_Target_Inflorescence, 
+                  FI_NrInflorescence_Target_Shoot, FI_SeedsProjArea, 
+                  FI_SeedsTCW, FI_SeedsWLRatio, FI_NrSeedling_Target, 
+                  FI_DurationFlowreing_Target_Phenology, FI_rootCa, 
+                  FI_rootK, FI_rootNa, FI_rootP, FI_rootS)) %>% colnames()
+
+traitFD <- pe %>% subset(select = c(FD_ra, FD_lbpr,
+                  FD_la, FD_sra, FD_srl, FD_RNU, FD_nute, FD_k.rad, 
+                  FD_RootingDepth_Target, FD_h1, FD_erect, FD_lar, 
+                  FD_fc, FD_sla, FD_lSize, FD_srr, FD_sd, FD_ssd, 
+                  FD_leafN, FD_leafC, FD_Nacr, FD_cond, FD_lt, FD_pp, 
+                  FD_lsd, FD_ldmc, FD_LCN, FD_rtd, FD_RCN, FD_sdmc, 
+                  FD_BM_Target_Inflorescence, 
+                  FD_NrInflorescence_Target_Shoot, FD_SeedsProjArea, 
+                  FD_SeedsTCW, FD_SeedsWLRatio, FD_NrSeedling_Target, 
+                  FD_DurationFlowreing_Target_Phenology, FD_rootCa, 
+                  FD_rootK, FD_rootNa, FD_rootP, FD_rootS)) %>% colnames()
+
+### Six focus traits: SLA, plant height, leaf N concentration, leaf dry matter content, stem tissue density and leaf area
+
+focTraitFI <- c("FI_sla", "FI_h1", "FI_leafN", "FI_ldmc", "FI_ssd", 
+                "FI_la")
+
+focTraitFD <- c("FD_sla", "FD_h1", "FD_leafN", "FD_ldmc", "FD_ssd", 
+                "FD_la")
+```
+
+### Run LMM Model on Ecosystem Properties in "f" using variables in "p" as
+### predictors
+```{r}
+### Create empty list to store models
+lmListFIfull <- list()
+lmListFDfull <- list()
+lmListEPnull <- list()
+            
+for (i in 1:length(ecoProp)){
+  
+  lmListFDfull[[i]] <- lmer(paste0(ecoProp[[i]], "~ FD_sla + FD_h1 + FD_leafN + FD_ldmc + FD_ssd + FD_la + (1 | PlotNum) + (1 | YearNum)"), data = d, na.action = na.omit)
+  
+  lmListFIfull[[i]] <- lmer(paste0(ecoProp[[i]], "~ FI_sla + FI_h1 + FI_leafN + FI_ldmc + FI_ssd + FI_la + (1 | PlotNum) + (1 | YearNum)"), data = d, na.action = na.omit)
+  
+ lmListEPnull[[i]] <- lmer(paste0(ecoProp[[i]], "~ 1 + (1 | PlotNum) + (1 | YearNum)"), data = d, na.action = na.omit)
+  }
+```
+
+```{r}
+rSqrFD <- list()
+rSqrFI <- list()
+
+    
+for (i in 1:length(ecoProp)){
+  
+  rSqrFD[[i]] <- r.squaredGLMM(lmListFDfull[[i]],lmListEPnull[[i]])
+  
+  rSqrFI[[i]] <- r.squaredGLMM(lmListFIfull[[i]],lmListEPnull[[i]])
+}
+
+
+```
+
+```{r}
+rSqrFD <- lapply(rSqrFD, "[", , "R2m") 
+rSqrFI <- lapply(rSqrFI, "[", , "R2m") 
+```
+
+```{r}
+results <- data.frame(EcoProp = character(), R2FI = numeric(), R2FD = numeric(), stringsAsFactors = FALSE)
+
+for (i in 1:length(ecoProp)){
+  vec <- c(ecoProp[[i]], rSqrFI[[i]], rSqrFD[[i]])
+  results[i, ] <- vec
+}
+
+results <- results %>% mutate(R2FI = as.numeric(R2FI), R2FD = as.numeric(R2FD))
+
+view(results)
+```
+
