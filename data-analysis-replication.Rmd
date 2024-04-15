@@ -12,6 +12,7 @@ library(MuMIn)
 library(MASS)
 library(AICcmodavg)
 library(broom)
+library(stringi)
 ```
 
 ### Load in files
@@ -49,8 +50,6 @@ d <- merge(fe, pe, by = "Plot_ID") %>% subset(select=-c(plot.y,season.y,year.y))
   setnames( "plot.x", "PlotNum") %>%
   setnames( "year.x", "YearNum") %>%
   mutate(YearNum = as.factor(YearNum))
-
-### Left Join
 ```
 
 ### Create lists of Ecosystem Properties and FI and FD trait names
@@ -95,18 +94,48 @@ focTraitFD <- c("FD_sla", "FD_h1", "FD_leafN", "FD_ldmc", "FD_ssd",
 ### Run LMM Model on Ecosystem Properties in "f" using variables in "p" as
 ### predictors
 ```{r}
-### Create empty list to store models
+### Create empty list to store models and predictors
 lmListFIfull <- list()
 lmListFDfull <- list()
-lmListEPnull <- list()
+predictorsFD <- list()
+predictorsFI <- list()
+lmMListFIfull <- list()
+lmMListFDfull <- list()
+lmMListEPnull <- list()
+
+#Create linear models and identify significant predictors
+for (i in 1:length(ecoProp)){
+  lmListFDfull[[i]] <- lm(paste0(ecoProp[[i]], "~ FD_sla + FD_h1 + FD_leafN + FD_ldmc + FD_ssd + FD_la"), data = d) %>%
+    stepAIC(.~., direction = "both") %>%
+    tidy() %>%
+    tail(-1)
+  
+  lmListFIfull[[i]] <- lm(paste0(ecoProp[[i]], "~ FI_sla + FI_h1 + FI_leafN + FI_ldmc + FI_ssd + FI_la"), data = d) %>%
+    stepAIC(.~., direction = "both") %>%
+    tidy() %>%
+    tail(-1)
+}
+
+# Store predictors in list for use in lmer formula
+for (i in 1:length(ecoProp)){
+  predictorsFD[[i]] <- lmListFDfull[[i]]$term
+  
+  predictorsFI[[i]] <- lmListFIfull[[i]]$term
+}
+
+for (i in 1:length(ecoProp)){
+  predictorsFD[[i]] <- stri_paste(predictorsFD[[i]], collapse = " + ")
+  
+  predictorsFI[[i]] <- stri_paste(predictorsFI[[i]], collapse = " + ")
+}
             
 for (i in 1:length(ecoProp)){
   
-  lmListFDfull[[i]] <- lmer(paste0(ecoProp[[i]], "~ FD_sla + FD_h1 + FD_leafN + FD_ldmc + FD_ssd + FD_la + (1 | PlotNum) + (1 | YearNum)"), data = d, na.action = na.omit)
+  lmMListFDfull[[i]] <- lmer(paste0(ecoProp[[i]], "~ FD_sla + FD_h1 + FD_leafN + FD_ldmc + FD_ssd + FD_la + (1 | PlotNum) + (1 | YearNum)"), data = d, na.action = na.omit)
   
-  lmListFIfull[[i]] <- lmer(paste0(ecoProp[[i]], "~ FI_sla + FI_h1 + FI_leafN + FI_ldmc + FI_ssd + FI_la + (1 | PlotNum) + (1 | YearNum)"), data = d, na.action = na.omit)
+  lmMListFIfull[[i]] <- lmer(paste0(ecoProp[[i]], "~ FI_sla + FI_h1 + FI_leafN + FI_ldmc + FI_ssd + FI_la + (1 | PlotNum) + (1 | YearNum)"), data = d, na.action = na.omit)
   
- lmListEPnull[[i]] <- lmer(paste0(ecoProp[[i]], "~ 1 + (1 | PlotNum) + (1 | YearNum)"), data = d, na.action = na.omit)
+ lmMListEPnull[[i]] <- lmer(paste0(ecoProp[[i]], "~ 1 + (1 | PlotNum) + (1 | YearNum)"), data = d, na.action = na.omit)
   }
 ```
 
@@ -117,12 +146,10 @@ rSqrFI <- list()
     
 for (i in 1:length(ecoProp)){
   
-  rSqrFD[[i]] <- r.squaredGLMM(lmListFDfull[[i]],lmListEPnull[[i]])
+  rSqrFD[[i]] <- r.squaredGLMM(lmMListFDfull[[i]],lmMListEPnull[[i]])
   
-  rSqrFI[[i]] <- r.squaredGLMM(lmListFIfull[[i]],lmListEPnull[[i]])
+  rSqrFI[[i]] <- r.squaredGLMM(lmMListFIfull[[i]],lmMListEPnull[[i]])
 }
-
-
 ```
 
 ```{r}
