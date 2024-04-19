@@ -131,11 +131,11 @@ for (i in 1:length(ecoProp)){
             
 for (i in 1:length(ecoProp)){
   
-  lmMListFDfull[[i]] <- lmer(paste0(ecoProp[[i]], "~ FD_sla + FD_h1 + FD_leafN + FD_ldmc + FD_ssd + FD_la + (1 | PlotNum) + (1 | YearNum)"), data = d, na.action = na.omit)
+  lmMListFDfull[[i]] <- lmer(paste0(ecoProp[[i]], " ~ ", predictorsFD[[i]]," + (1 | PlotNum) + (1 | YearNum)"), data = d, na.action = na.omit)
   
-  lmMListFIfull[[i]] <- lmer(paste0(ecoProp[[i]], "~ FI_sla + FI_h1 + FI_leafN + FI_ldmc + FI_ssd + FI_la + (1 | PlotNum) + (1 | YearNum)"), data = d, na.action = na.omit)
+  lmMListFIfull[[i]] <- lmer(paste0(ecoProp[[i]], " ~ ",predictorsFI[[i]]," + (1 | PlotNum) + (1 | YearNum)"), data = d, na.action = na.omit)
   
- lmMListEPnull[[i]] <- lmer(paste0(ecoProp[[i]], "~ 1 + (1 | PlotNum) + (1 | YearNum)"), data = d, na.action = na.omit)
+ lmMListEPnull[[i]] <- lmer(paste0(ecoProp[[i]], "~ (1 | PlotNum) + (1 | YearNum)"), data = d, na.action = na.omit)
   }
 ```
 
