@@ -3,7 +3,12 @@ title: "data-analysis-replication"
 output: html_document
 date: "2024-04-03"
 ---
+```{r}
+### The purpose of this paper was to analyze the relationship between plant traits and ecosystem properties to see if plant traits could be used as predictors of ecosystem properties using linear mixed models and calculating marginal r^2 values of those models to investigate the proportion of variance explained by traits. The analysis focused on six plant functional traits as predictors of the ecosystem properties. There were two datasets used, which are saved as p and f in this code. Dataset P contains plot data with variables to be used as the ecosystem properties and dataset f contains the data regarding the plant functional traits for each plot. Dataset "f" contains two separate values for each trait "FD" and "FI", in my analysis I separated the values for each model as using both in each model led to more different results than the authors. 
+```
 
+
+### Load in libraries
 ```{r}
 library(tidyverse)
 library(data.table)
@@ -17,20 +22,28 @@ library(stringi)
 
 ### Load in files
 ```{r}
+
+### This was one of the included datasets and was used to calculate dataset "f" by the authors. 
 f1 <- "https://raw.githubusercontent.com/RyanRay01/data-analysis-replication/main/data/traits.st.csv"
 t <- read_csv(f1)
 
+# This is the dataset containing the plot ecosystem functions
 f2 <- "https://raw.githubusercontent.com/RyanRay01/data-analysis-replication/main/data/predictors_raw.csv"
 
 p <- read_csv(f2)
 
+head(p)
+
+# This is the dataset containing the plot plant functional trait values.
 f3 <- "https://raw.githubusercontent.com/RyanRay01/data-analysis-replication/main/data/functions4.st.csv"
 
 f <- read_csv(f3)
 
+head(f)
+
 ```
 
-### 
+### Merging of f and p datsets so that there is a single coherent dataset
 ```{r}
 ### Give "f" arbitrary "seasons" so it can work with "p"
 fe <- f %>% 
@@ -93,7 +106,7 @@ focTraitFD <- c("FD_sla", "FD_h1", "FD_leafN", "FD_ldmc", "FD_ssd",
 
 ### Run LMM Model on Ecosystem Properties in "f" using variables in "p" as
 ### predictors
-```{r}
+```{r, results='hide'}
 ### Create empty list to store models and predictors
 lmListFIfull <- list()
 lmListFDfull <- list()
@@ -123,22 +136,30 @@ for (i in 1:length(ecoProp)){
   predictorsFI[[i]] <- lmListFIfull[[i]]$term
 }
 
+# Modify the list for use in lmer() function
 for (i in 1:length(ecoProp)){
   predictorsFD[[i]] <- stri_paste(predictorsFD[[i]], collapse = " + ")
   
   predictorsFI[[i]] <- stri_paste(predictorsFI[[i]], collapse = " + ")
 }
-            
+
+# Generate models with lmer() for each response variable using the
+# associated significant predictors. Plot and Year are random variables
+# for creating the models.
 for (i in 1:length(ecoProp)){
   
+  #Create models for FD values
   lmMListFDfull[[i]] <- lmer(paste0(ecoProp[[i]], " ~ ", predictorsFD[[i]]," + (1 | PlotNum) + (1 | YearNum)"), data = d, na.action = na.omit)
   
+  #Create models for FI values
   lmMListFIfull[[i]] <- lmer(paste0(ecoProp[[i]], " ~ ",predictorsFI[[i]]," + (1 | PlotNum) + (1 | YearNum)"), data = d, na.action = na.omit)
   
+  #Create null models for use in r.squaredGLMM() 
  lmMListEPnull[[i]] <- lmer(paste0(ecoProp[[i]], "~ (1 | PlotNum) + (1 | YearNum)"), data = d, na.action = na.omit)
   }
 ```
 
+### Create list of r^2 values using r.squaredGLMM() for each model created
 ```{r}
 rSqrFD <- list()
 rSqrFI <- list()
@@ -151,12 +172,13 @@ for (i in 1:length(ecoProp)){
   rSqrFI[[i]] <- r.squaredGLMM(lmMListFIfull[[i]],lmMListEPnull[[i]])
 }
 ```
-
+### Take only the marginal r^2 values
 ```{r}
 rSqrFD <- lapply(rSqrFD, "[", , "R2m") 
 rSqrFI <- lapply(rSqrFI, "[", , "R2m") 
 ```
 
+### Put results into a table and view as a histogram
 ```{r}
 results <- data.frame(EcoProp = character(), R2FI = numeric(), R2FD = numeric(), stringsAsFactors = FALSE)
 
@@ -165,8 +187,37 @@ for (i in 1:length(ecoProp)){
   results[i, ] <- vec
 }
 
-results <- results %>% mutate(R2FI = as.numeric(R2FI), R2FD = as.numeric(R2FD))
+results <- results %>% mutate(R2FI = as.numeric(R2FI), R2FD = as.numeric(R2FD), FIpercentvar = as.numeric(R2FI)*100, FDpercentvar = as.numeric(R2FD)*100)
 
-view(results)
+results
+
+meanFI <- mean(results$R2FI)
+meanFI
+
+meanFD <- mean(results$R2FD)
+meanFD
+
+### The original paper had a mean r^2 value of 0.078, indicating that a higher amount of variance was explained by their predictors.
 ```
 
+### Create histograms to recreate Figure 3a.
+```{r}
+histFI <- ggplot(data = results, aes(x = FIpercentvar)) +
+  geom_histogram(binwidth = 5) + xlab("Percentage variance explained") +
+  ylab("Number of properties") + xlim(c(0,25))
+histFI
+
+histFD <- ggplot(data = results, aes(x = FDpercentvar)) +
+  geom_histogram(binwidth = 5) + xlab("Percentage variance explained") +
+  ylab("Number of properties") + xlim(c(0,25))
+histFD
+```
+
+```{r echo=FALSE, width="###px"}
+knitr::include_graphics("images/Figure_3.jpg")
+```
+
+### Discussion
+```{r}
+# One of the main challenges with replicating this analysis was the author calculated 2 metrics FD and FI for each trait but did not make it clear how these were handled in the creation of the models, or at the very least it was not apparent to me what they did. I was unable to recreate their results by separating the FD and FI values, but even when used both values for creating the models I was unable to achieve the same results. The authors got an average of .078 for their r^2 values, whereas I was only able to get an average of about .2 for both metrics. There were some parts of their methods that I suspect would help by transforming the variables, though I didn't fully understand that process. Additionally, I used a null based on the ecosystem properties, whereas they used a permutation null, which likely impacted my results. However, I was unsure of why they used the null they did, which included all of the measured traits instead of permutations consisting of the six focal traits and again was unsure of how to treat the FD and FI metrics in constructing a null. 
+```
