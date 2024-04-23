@@ -161,7 +161,9 @@ for (i in 1:length(ecoProp)){
   #Create null models for use in r.squaredGLMM() 
  lmMListEPnull[[i]] <- lmer(paste0(ecoProp[[i]], "~ (1 | PlotNum) + (1 | YearNum)"), data = d, na.action = na.omit)
 }
+```
 
+```{r}
 lmMListFIfull[[1]]
 ```
 

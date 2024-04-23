@@ -533,7 +533,22 @@ for (i in 1:length(ecoProp)){
   
   #Create null models for use in r.squaredGLMM() 
  lmMListEPnull[[i]] &lt;- lmer(paste0(ecoProp[[i]], &quot;~ (1 | PlotNum) + (1 | YearNum)&quot;), data = d, na.action = na.omit)
-  }</code></pre>
+}</code></pre>
+<pre class="r"><code>lmMListFIfull[[1]]</code></pre>
+<pre><code>## Linear mixed model fit by REML [&#39;lmerMod&#39;]
+## Formula: Abundance_AbovegroundFauna_PitfallTraps ~ FI_sla + FI_leafN +  
+##     FI_ssd + (1 | PlotNum) + (1 | YearNum)
+##    Data: d
+## REML criterion at convergence: 360.5215
+## Random effects:
+##  Groups   Name        Std.Dev.
+##  PlotNum  (Intercept) 0.3296  
+##  YearNum  (Intercept) 1.0717  
+##  Residual             0.3320  
+## Number of obs: 334, groups:  PlotNum, 78; YearNum, 3
+## Fixed Effects:
+## (Intercept)       FI_sla     FI_leafN       FI_ssd  
+##     0.17693     -0.20937      0.25568      0.04592</code></pre>
 </div>
 <div id="create-list-of-r2-values-using-r.squaredglmm-for-each-model-created" class="section level3">
 <h3>Create list of r^2 values using r.squaredGLMM() for each model
@@ -547,7 +562,11 @@ for (i in 1:length(ecoProp)){
   rSqrFD[[i]] &lt;- r.squaredGLMM(lmMListFDfull[[i]],lmMListEPnull[[i]])
   
   rSqrFI[[i]] &lt;- r.squaredGLMM(lmMListFIfull[[i]],lmMListEPnull[[i]])
-}</code></pre>
+}
+
+rSqrFI[[1]]</code></pre>
+<pre><code>##             R2m       R2c
+## [1,] 0.02337383 0.9212932</code></pre>
 </div>
 <div id="take-only-the-marginal-r2-values" class="section level3">
 <h3>Take only the marginal r^2 values</h3>
