@@ -3,6 +3,10 @@ title: "data-analysis-replication"
 output: html_document
 date: "2024-04-03"
 ---
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+```
+
 ```{r}
 ### The purpose of this paper was to analyze the relationship between plant traits and ecosystem properties to see if plant traits could be used as predictors of ecosystem properties using linear mixed models and calculating marginal r^2 values of those models to investigate the proportion of variance explained by traits. The analysis focused on six plant functional traits as predictors of the ecosystem properties. There were two datasets used, which are saved as p and f in this code. Dataset P contains plot data with variables to be used as the ecosystem properties and dataset f contains the data regarding the plant functional traits for each plot. Dataset "f" contains two separate values for each trait "FD" and "FI", in my analysis I separated the values for each model as using both in each model led to more different results than the authors. 
 ```
@@ -202,14 +206,29 @@ meanFD
 
 ### Create histograms to recreate Figure 3a.
 ```{r}
-histFI <- ggplot(data = results, aes(x = FIpercentvar)) +
-  geom_histogram(binwidth = 5) + xlab("Percentage variance explained") +
-  ylab("Number of properties") + xlim(c(0,25))
+
+#results <- results %>%
+#            mutate(
+#              FIpercentvar = ceiling(FIpercentvar),
+#             FDpercentvar = ceiling(FDpercentvar)
+#            )
+
+histFI <- ggplot(
+                data = results,
+                aes(x = FIpercentvar)) +
+          geom_histogram(
+            breaks = seq(0, 25, 5),
+            colour='black') +
+          xlab("Percentage variance explained") +
+          ylab("Number of properties") +
+          xlim(c(0,25)) +
+          ylim(c(0,35))
+
 histFI
 
 histFD <- ggplot(data = results, aes(x = FDpercentvar)) +
-  geom_histogram(binwidth = 5) + xlab("Percentage variance explained") +
-  ylab("Number of properties") + xlim(c(0,25))
+  geom_histogram(breaks = seq(0, 25, 5)) + xlab("Percentage variance explained") +
+  ylab("Number of properties") + xlim(c(0,25)) + ylim(c(0,35))
 histFD
 ```
 
@@ -219,5 +238,5 @@ knitr::include_graphics("images/Figure_3.jpg")
 
 ### Discussion
 ```{r}
-# One of the main challenges with replicating this analysis was the author calculated 2 metrics FD and FI for each trait but did not make it clear how these were handled in the creation of the models, or at the very least it was not apparent to me what they did. I was unable to recreate their results by separating the FD and FI values, but even when used both values for creating the models I was unable to achieve the same results. The authors got an average of .078 for their r^2 values, whereas I was only able to get an average of about .2 for both metrics. There were some parts of their methods that I suspect would help by transforming the variables, though I didn't fully understand that process. Additionally, I used a null based on the ecosystem properties, whereas they used a permutation null, which likely impacted my results. However, I was unsure of why they used the null they did, which included all of the measured traits instead of permutations consisting of the six focal traits and again was unsure of how to treat the FD and FI metrics in constructing a null. 
+# One of the main challenges with replicating this analysis was the author calculated 2 metrics FD and FI for each trait but did not make it clear how these were handled in the creation of the models, or at the very least it was not apparent to me what they did. I was unable to recreate their results by separating the FD and FI values, but even when used both values for creating the models I was unable to achieve the same results. The authors got an average of .078 for their r^2 values, whereas I was only able to get an average of about .2 for both metrics. Despite this, I was able to get a similar right-skewed distribution as the original study. This was to be expected though, since the original authors found that traits were not a good indicator of ecosystem properties. Compared to the original study, I found that over 30 of the 42 ecosystem properties had less than 5% of their variance explained by their predictor variables. Only 4 properties had 5 - 10% of their variance explained using the FD metric, and about 7 using the FI. Using the FI metric I only had one property explained between 10-15% and about three using FD. The original study had about 26 properties from 0 - 5%, nine from 5-10%, four from 10-15%, two from 15-20%, and one from 20-25%. The difference from our results likely stemmed from me not understanding how they handled the FD and FI measurements, as well as some confusion on my part as to how and why they constructed their null model, which led to me using nulls based on each of the ecosystem properties. 
 ```
