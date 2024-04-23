@@ -554,8 +554,8 @@ for (i in 1:length(ecoProp)){
 <pre class="r"><code>rSqrFD &lt;- lapply(rSqrFD, &quot;[&quot;, , &quot;R2m&quot;) 
 rSqrFI &lt;- lapply(rSqrFI, &quot;[&quot;, , &quot;R2m&quot;) </code></pre>
 </div>
-<div id="put-results-into-a-table-and-view-as-a-histogram" class="section level3">
-<h3>Put results into a table and view as a histogram</h3>
+<div id="put-results-into-a-table-and-calculate-mean-r2-values" class="section level3">
+<h3>Put results into a table and calculate mean r^2 values</h3>
 <pre class="r"><code>results &lt;- data.frame(EcoProp = character(), R2FI = numeric(), R2FD = numeric(), stringsAsFactors = FALSE)
 
 for (i in 1:length(ecoProp)){
@@ -565,93 +565,21 @@ for (i in 1:length(ecoProp)){
 
 results &lt;- results %&gt;% mutate(R2FI = as.numeric(R2FI), R2FD = as.numeric(R2FD), FIpercentvar = as.numeric(R2FI)*100, FDpercentvar = as.numeric(R2FD)*100)
 
-results</code></pre>
-<pre><code>##                                     EcoProp         R2FI         R2FD
-## 1   Abundance_AbovegroundFauna_PitfallTraps 0.0233738317 0.0125218691
-## 2         SR_AbovegroundFauna_SuctionSample 0.0331360779 0.1038816227
-## 3                        BM_Earthworm_total 0.0091313285 0.0148463673
-## 4                 FrequencyPollinator_Total 0.0928269737 0.0663939050
-## 5                        NrPollinator_Total 0.0878926736 0.0263609582
-## 6                 Resiliance_Target_Drought 0.0379309549 0.0472333938
-## 7                 Resistance_Target_Drought 0.0271530099 0.0194087011
-## 8          SR_AbovegroundFauna_PitfallTraps 0.0225235282 0.0023572712
-## 9  Abundance_AbovegroundFauna_SuctionSample 0.0553892919 0.0062636251
-## 10                         ALL_C_Soil_Inorg 0.0006087303 0.0008629500
-## 11                           ALL_C_Soil_Org 0.0003858920 0.0005731066
-## 12                               ALL_N_Soil 0.0041499246 0.0057306145
-## 13                          BM_Microbe_Soil 0.0168867737 0.0068632869
-## 14                            BM_Root_Total 0.0288462151 0.0557129446
-## 15                         BulkDensity_Soil 0.0066145412 0.0025256900
-## 16                                 N15_Soil 0.0007909442 0.0041695717
-## 17                              NH4_Soil_15 0.0005730707 0.0044267836
-## 18                                Nr_Larvae 0.0422669953 0.0271346214
-## 19         SpecificRespiratoryQuotient_Soil 0.0218708344 0.0124310335
-## 20                                   P_Soil 0.0162966302 0.0065392687
-## 21                   target_biomass_average 0.0684418396 0.0393627308
-## 22      ConsumedBM_Target_DryWeight_average 0.0772159111 0.0412026748
-## 23                 Cover_BareGround_average 0.0268125022 0.1095790882
-## 24                             DF30_average 0.0002681584 0.0006799821
-## 25                             DF70_average 0.0018483856 0.0000000000
-## 26                            ETa30_average 0.0010044392 0.0010118896
-## 27                            ETa70_average 0.0038989510 0.0007010240
-## 28                 Herbivory_Target_average 0.0679148783 0.0092400595
-## 29                        inv_cover_average 0.0321385934 0.0341438567
-## 30                      inv_species_average 0.0156092203 0.0801596915
-## 31                        LAI_Total_average 0.1437823788 0.1001882331
-## 32                         Leaching_average 0.0289755677 0.0310023512
-## 33                          Nitrate_average 0.0080022340 0.0128288100
-## 34                             UF30_average 0.0482577535 0.0055692016
-## 35                             UF70_average 0.0185936320 0.0029662950
-## 36                          Water30_average 0.0012566848 0.0021876656
-## 37                          Water70_average 0.0066800467 0.0016618187
-## 38            BasalRespiration_Soil_average 0.0063922721 0.0334112127
-## 39                             dead.biomass 0.0821878128 0.0392669972
-## 40                         rain.throughfall 0.0045104727 0.0005984463
-## 41                      mesofauna.abundance 0.0534574215 0.0112566048
-## 42                     macrofauna.abundance 0.0031068628 0.0865052244
-##    FIpercentvar FDpercentvar
-## 1    2.33738317   1.25218691
-## 2    3.31360779  10.38816227
-## 3    0.91313285   1.48463673
-## 4    9.28269737   6.63939050
-## 5    8.78926736   2.63609582
-## 6    3.79309549   4.72333938
-## 7    2.71530099   1.94087011
-## 8    2.25235282   0.23572712
-## 9    5.53892919   0.62636251
-## 10   0.06087303   0.08629500
-## 11   0.03858920   0.05731066
-## 12   0.41499246   0.57306145
-## 13   1.68867737   0.68632869
-## 14   2.88462151   5.57129446
-## 15   0.66145412   0.25256900
-## 16   0.07909442   0.41695717
-## 17   0.05730707   0.44267836
-## 18   4.22669953   2.71346214
-## 19   2.18708344   1.24310335
-## 20   1.62966302   0.65392687
-## 21   6.84418396   3.93627308
-## 22   7.72159111   4.12026748
-## 23   2.68125022  10.95790882
-## 24   0.02681584   0.06799821
-## 25   0.18483856   0.00000000
-## 26   0.10044392   0.10118896
-## 27   0.38989510   0.07010240
-## 28   6.79148783   0.92400595
-## 29   3.21385934   3.41438567
-## 30   1.56092203   8.01596915
-## 31  14.37823788  10.01882331
-## 32   2.89755677   3.10023512
-## 33   0.80022340   1.28288100
-## 34   4.82577535   0.55692016
-## 35   1.85936320   0.29662950
-## 36   0.12566848   0.21876656
-## 37   0.66800467   0.16618187
-## 38   0.63922721   3.34112127
-## 39   8.21878128   3.92669972
-## 40   0.45104727   0.05984463
-## 41   5.34574215   1.12566048
-## 42   0.31068628   8.65052244</code></pre>
+head(results)</code></pre>
+<pre><code>##                                   EcoProp        R2FI       R2FD FIpercentvar
+## 1 Abundance_AbovegroundFauna_PitfallTraps 0.023373832 0.01252187    2.3373832
+## 2       SR_AbovegroundFauna_SuctionSample 0.033136078 0.10388162    3.3136078
+## 3                      BM_Earthworm_total 0.009131329 0.01484637    0.9131329
+## 4               FrequencyPollinator_Total 0.092826974 0.06639390    9.2826974
+## 5                      NrPollinator_Total 0.087892674 0.02636096    8.7892674
+## 6               Resiliance_Target_Drought 0.037930955 0.04723339    3.7930955
+##   FDpercentvar
+## 1     1.252187
+## 2    10.388162
+## 3     1.484637
+## 4     6.639390
+## 5     2.636096
+## 6     4.723339</code></pre>
 <pre class="r"><code>meanFI &lt;- mean(results$R2FI)
 meanFI</code></pre>
 <pre><code>## [1] 0.02926201</code></pre>
@@ -662,13 +590,7 @@ meanFD</code></pre>
 </div>
 <div id="create-histograms-to-recreate-figure-3a." class="section level3">
 <h3>Create histograms to recreate Figure 3a.</h3>
-<pre class="r"><code>#results &lt;- results %&gt;%
-#            mutate(
-#              FIpercentvar = ceiling(FIpercentvar),
-#             FDpercentvar = ceiling(FDpercentvar)
-#            )
-
-histFI &lt;- ggplot(
+<pre class="r"><code>histFI &lt;- ggplot(
                 data = results,
                 aes(x = FIpercentvar)) +
           geom_histogram(

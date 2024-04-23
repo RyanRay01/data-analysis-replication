@@ -160,7 +160,9 @@ for (i in 1:length(ecoProp)){
   
   #Create null models for use in r.squaredGLMM() 
  lmMListEPnull[[i]] <- lmer(paste0(ecoProp[[i]], "~ (1 | PlotNum) + (1 | YearNum)"), data = d, na.action = na.omit)
-  }
+}
+
+lmMListFIfull[[1]]
 ```
 
 ### Create list of r^2 values using r.squaredGLMM() for each model created
@@ -175,6 +177,8 @@ for (i in 1:length(ecoProp)){
   
   rSqrFI[[i]] <- r.squaredGLMM(lmMListFIfull[[i]],lmMListEPnull[[i]])
 }
+
+rSqrFI[[1]]
 ```
 ### Take only the marginal r^2 values
 ```{r}
