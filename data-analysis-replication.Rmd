@@ -182,7 +182,7 @@ rSqrFD <- lapply(rSqrFD, "[", , "R2m")
 rSqrFI <- lapply(rSqrFI, "[", , "R2m") 
 ```
 
-### Put results into a table and view as a histogram
+### Put results into a table and calculate mean r^2 values
 ```{r}
 results <- data.frame(EcoProp = character(), R2FI = numeric(), R2FD = numeric(), stringsAsFactors = FALSE)
 
@@ -193,7 +193,7 @@ for (i in 1:length(ecoProp)){
 
 results <- results %>% mutate(R2FI = as.numeric(R2FI), R2FD = as.numeric(R2FD), FIpercentvar = as.numeric(R2FI)*100, FDpercentvar = as.numeric(R2FD)*100)
 
-results
+head(results)
 
 meanFI <- mean(results$R2FI)
 meanFI
@@ -206,13 +206,6 @@ meanFD
 
 ### Create histograms to recreate Figure 3a.
 ```{r}
-
-#results <- results %>%
-#            mutate(
-#              FIpercentvar = ceiling(FIpercentvar),
-#             FDpercentvar = ceiling(FDpercentvar)
-#            )
-
 histFI <- ggplot(
                 data = results,
                 aes(x = FIpercentvar)) +
